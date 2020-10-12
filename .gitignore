@@ -1,0 +1,6 @@
+*.a
+*.mod
+*.ko
+*.cmd
+.vscode
+*.mod.c
