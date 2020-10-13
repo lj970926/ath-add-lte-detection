@@ -143,6 +143,7 @@ static int
 ath_lte_fft_analysis(struct fft_sample_ht20* fft_sample_20) 
 {
 	/*analyse fft to distinguish between lte and other signals*/
+	
 
 }
 
@@ -153,6 +154,14 @@ static int ath_lte_exist_interference(struct ath_lte_registers* first,
 		use values of four registers at diffrerent time to judge
 		 if there is an interference
 	*/
+	u32 num_intf_first = first->busy - first->rx - first->tx;
+	u32 num_intf_second = second->busy - second->rx - second->tx;
+	if (num_intf_second > num_intf_first) {
+		return 1;
+	}else if (num_intf_second < num_intf_first && num_intf_second) {
+		return 1;
+	}
+	return 0;
 }
 
 static int
