@@ -102,6 +102,13 @@ struct ath_spec_scan_priv {
 	struct ath_spec_scan spec_config;
 };
 
+struct ath_lte_registers {
+	u32 cycles;
+	u32 busy;
+	u32 rx;
+	u32 tx;
+};
+
 #define SPECTRAL_HT20_40_TOTAL_DATA_LEN	(sizeof(struct ath_ht20_40_fft_packet))
 #define	SPECTRAL_HT20_40_SAMPLE_LEN	(sizeof(struct ath_ht20_40_mag_info) +\
 					SPECTRAL_HT20_40_NUM_BINS)

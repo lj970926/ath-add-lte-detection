@@ -127,6 +127,34 @@ typedef int (ath_cmn_fft_sample_handler) (struct ath_rx_status *rs,
 			struct ath_spec_scan_priv *spec_priv,
 			u8 *sample_buf, u64 tsf, u16 freq, int chan_type);
 
+static void 
+ath_lte_read_registers(struct ath_hw* ah, struct ath_lte_registers* register)
+{
+	/*
+		read four registers needed for interference analysis
+	*/
+	register->cycles = REG_READ(ah, AR_CCCNT);
+	register->busy = REG_READ(ah, AR_RCCNT);
+	register->rx = REG_READ(ah, AR_RFCNT);
+	register->tx = REG_READ(ah, AR_TFCNT);
+}
+
+static int 
+ath_lte_fft_analysis(struct fft_sample_ht20* fft_sample_20) 
+{
+	/*analyse fft to distinguish between lte and other signals*/
+
+}
+
+static int ath_lte_exist_interference(struct ath_lte_registers* first, 
+			struct ath_lte_registers* second)
+{
+	/*
+		use values of four registers at diffrerent time to judge
+		 if there is an interference
+	*/
+}
+
 static int
 ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
 			struct ath_spec_scan_priv *spec_priv,
@@ -225,6 +253,16 @@ ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
 		return ret;
 
 	tlv = (struct fft_sample_tlv *)&fft_sample_20;
+
+	/* lte signal detection*/
+	struct ath_lte_registers first_regs_snap, second_regs_snap;
+	ath_lte_read_registers(ah, &first_regs_snap);	//the first registers snapshot
+	ath_lte_read_registers(ah, &second_regs_snap);	//the second registers snapshot
+	if (ath_lte_exist_interference(&first_regs_snap, &second_regs_snap)) {
+		if (ath_lte_fft_analysis()){
+
+		}
+	}
 
 	ath_debug_send_fft_sample(spec_priv, tlv);
 
