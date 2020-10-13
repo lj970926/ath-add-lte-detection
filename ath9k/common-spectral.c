@@ -139,11 +139,35 @@ ath_lte_read_registers(struct ath_hw* ah, struct ath_lte_registers* register)
 	register->tx = REG_READ(ah, AR_TFCNT);
 }
 
+static int
+ath_lte_num_effective_peaks(u8* data, int sthr){
+	/*
+		count the number of peaks which signal strength are larger than the threshold
+	*/
+	int i, count = 0;
+	for (i = 0; i < SPECTRAL_HT20_NUM_BINS; ++i) {
+		int is_peak = 1;
+		if (i > 0 && data[i] < data[i - 1])
+			is_peak = 0;
+
+		if (i < SPECTRAL_HT20_NUM_BINS - 1 && data[i] < data[i + 1])
+			is_peak = 0;
+		if (is_peak && data[i] > sthr)
+			count++;
+	}
+	return count;
+}
+
 static int 
-ath_lte_fft_analysis(struct fft_sample_ht20* fft_sample_20) 
+ath_lte_fft_analysis(struct fft_sample_ht20* fft_sample_20, int sthr, int pthr) 
 {
 	/*analyse fft to distinguish between lte and other signals*/
-	
+	if (fft_sample_20->max_magnitude < pthr)
+		return 0;
+	int num_peaks = ath_lte_num_effective_peaks(fft_sample_20->data, sthr);
+	if (num_peaks >= pthr) 
+		return 1;
+	return 0;		
 
 }
 
@@ -267,10 +291,11 @@ ath_cmn_process_ht20_fft(struct ath_rx_status *rs,
 	struct ath_lte_registers first_regs_snap, second_regs_snap;
 	ath_lte_read_registers(ah, &first_regs_snap);	//the first registers snapshot
 	ath_lte_read_registers(ah, &second_regs_snap);	//the second registers snapshot
-	if (ath_lte_exist_interference(&first_regs_snap, &second_regs_snap)) {
-		if (ath_lte_fft_analysis()){
-
-		}
+	if (ath_lte_exist_interference(&first_regs_snap, &second_regs_snap) 
+		&& ath_lte_fft_analysis(&fft_sample_20, 0, 0)) {
+			/*
+				do something for reactive jamming
+			*/
 	}
 
 	ath_debug_send_fft_sample(spec_priv, tlv);
